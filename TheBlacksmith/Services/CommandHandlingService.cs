@@ -27,7 +27,6 @@ namespace TheBlacksmith.Services
         public async Task InitializeAsync(IServiceProvider provider)
         {
             _provider = provider;
-            //await _commands.AddModulesAsync(Assembly.GetEntryAssembly());
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), provider);
         }
 
@@ -39,7 +38,7 @@ namespace TheBlacksmith.Services
 
             int argPos = 0;
             if (!message.Content.StartsWith("/")) return;
-            //Todo : restriction sur un channel
+            //TODO : restriction sur un channel ou plutot un groupe de channel
 
             var context = new SocketCommandContext(_discord, message);
             var result = await _commands.ExecuteAsync(context, argPos, _provider);
