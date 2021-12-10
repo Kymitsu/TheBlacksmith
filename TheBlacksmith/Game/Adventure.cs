@@ -4,6 +4,18 @@ using System.Text;
 
 namespace TheBlacksmith.Game
 {
+    public class PlayerActionEvenArgs : EventArgs
+    {
+        public Player Player { get; set; }
+        public string action { get; set; }
+
+        public PlayerActionEvenArgs(Player player, string action)
+        {
+            Player = player;
+            this.action = action;
+        }
+    }
+
     public class Adventure
     {
         public ulong ChannelId { get; set; }
@@ -14,7 +26,10 @@ namespace TheBlacksmith.Game
         public int CompletedEncounter { get; set; }
         private Encounter CurrentEncounter { get; set; }
         public ulong EncouterMsgID { get; set; }
+        public StringBuilder EncounterMsg { get; set; }
         public ulong ActionsMsgID { get; set; }
+        public StringBuilder AdvMsg { get; set; }
+        public bool IsWaitingForPlayerAction { get; set; }
 
         public List<string> PossibleActions { get; set; }
 
@@ -25,13 +40,50 @@ namespace TheBlacksmith.Game
             Player = player;
             Difficulty = 0;
             CompletedEncounter = 0;
+
+            PossibleActions = new List<string>();
+
+            AdvMsg = new StringBuilder();
+
+            GenerateEncounter(this.Lvl);
+            CurrentEncounter.PossibleActions.CopyTo(PossibleActions);
+
+            EncounterMsg = CurrentEncounter.FightLog;
         }
 
-        public string NextStep(string action = "")
+        //TODO: unsubscribe from event? pas sûr que ça soit nécessaire
+        //https://stackoverflow.com/questions/4172809/should-i-unsubscribe-from-events
+        private void OnEndOfEncounter(object sender, EndOfEncounterEventArgs e)
         {
-            StringBuilder sb = new StringBuilder();
-            EncounterStatus status;
+            CompletedEncounter++;
+            PossibleActions.Clear();
+            PossibleActions.Add("Tavern");
+            PossibleActions.Add("Continue");
+            PossibleActions.Add("Deeper");
 
+            EncounterMsg = CurrentEncounter.FightLog;
+
+            switch (e.Status)
+            {
+                case EncounterStatus.Ongoing:
+                    throw new Exception("shouldn't happen");
+                case EncounterStatus.Victory:
+                    break;
+                case EncounterStatus.Defeat:
+                    AdvMsg.AppendLine("Your adventure end here, but this is not the end of your story.");
+                    break;
+                case EncounterStatus.Retreat:
+                    break;
+                default:
+                    break;
+            }
+
+            CurrentEncounter = null;
+
+        }
+
+        public void NextStep(string action = "")
+        {
             if (CurrentEncounter == null)
             {
                 switch (action)
@@ -40,12 +92,12 @@ namespace TheBlacksmith.Game
                         GenerateEncounter(this.Lvl);
                         break;
                     case "Tavern":
-                        sb.AppendLine("+ You return safely with your loot. You can rest now...");
-
-                        return sb.ToString();//TODO: A CHANGER. PAS OUF LE RETURN EN PLEIN MILIEU DE LA FONCTION
+                        AdvMsg.AppendLine("+ You return with your loot. You are safe now...");
+                        //Event end of adv ??
+                        return;
 
                     case "Continue":
-                        GenerateEncounter(this.Lvl);
+                        GenerateEncounter(this.Lvl + Difficulty);
                         break;
                     case "Deeper":
                         Difficulty++;
@@ -55,71 +107,26 @@ namespace TheBlacksmith.Game
                         break;
                 }
             }
-
-            bool isEndOfEncounter = false;
-            if(string.IsNullOrEmpty(action)) //1er tour avec playerTurn || action empty
-            {
-                if (CurrentEncounter.PlayerTurn)
-                    return sb.ToString();
-                else
-                {
-                    sb.AppendLine(CurrentEncounter.NextTurn(out status)); //Monster turn
-                    return sb.ToString();
-                }
-            }
-            else //normalement playerTurn
-            {
-                if (!CurrentEncounter.PlayerTurn)
-                    throw new NotImplementedException("Shouldn't happen");
-
-                sb.AppendLine(CurrentEncounter.NextTurn(out status, action)); //Player turn
-
-                switch (status)
-                {
-                    case EncounterStatus.Ongoing:
-                        sb.AppendLine(CurrentEncounter.NextTurn(out status)); //Monster turn
-                        if (status == EncounterStatus.Defeat)
-                        {
-                            sb.AppendLine("Your adventure end here, but this is not the end of your story.");
-                            isEndOfEncounter = true;
-                        }
-                        break;
-                    case EncounterStatus.Victory:
-
-                        isEndOfEncounter = true;
-                        break;
-                    case EncounterStatus.Retreat:
-                        isEndOfEncounter = true;
-                        break;
-                    default:
-                        throw new NotImplementedException("Shouldn't happen");
-                }
-            }
-
-            if (isEndOfEncounter)
-            {
-                CompletedEncounter++;
-                CurrentEncounter = null;
-                PossibleActions.Clear();
-                PossibleActions.Add("Tavern");
-                PossibleActions.Add("Continue");
-                PossibleActions.Add("Deeper");
-                
-            }
             else
             {
-                PossibleActions = CurrentEncounter.PossibleActions;
+                CurrentEncounter.PlayerTurnTODO(action);
+                if(CurrentEncounter != null && CurrentEncounter.Status == EncounterStatus.Ongoing)
+                    CurrentEncounter.PossibleActions.CopyTo(PossibleActions);
+
             }
 
-            return sb.ToString();
+            if (CurrentEncounter != null)
+            {
+                EncounterMsg = CurrentEncounter.FightLog; 
+            }
         }
 
         public void GenerateEncounter(int lvl)
         {
             Monster m = new Monster("Goblin", lvl);
             CurrentEncounter = new Encounter(Player, m);
-            EncounterStatus status;
-            CurrentEncounter.NextTurn(out status); //turn 0
+
+            CurrentEncounter.OnEndOfEncounter += OnEndOfEncounter;
         }
     }
 }

@@ -6,6 +6,8 @@ namespace TheBlacksmith.Game
 {
     public class Player : Entity
     {
+        public event Action OnLevelUp = delegate { };
+
         public string Mention { get; set; }
 
         public int Money { get; set; }
@@ -17,16 +19,19 @@ namespace TheBlacksmith.Game
             CurrentHp = currentHp;
             Money = 0;
             TotalExp = totalExp;
+
+            Attacks.Add(BasicAttack);
+            Attacks.Add(StrongAttack);
         }
 
 
         public bool AddExp(int xp)
         {
             TotalExp += xp;
-            if(TotalExp % (50*Lvl) >= 1)
+            if(TotalExp % (50*Lvl) == 0)
             {
-                //lvl up
                 LvlUp();
+                OnLevelUp(); //Raise lvl up event
                 return true;
             }
 
@@ -36,7 +41,9 @@ namespace TheBlacksmith.Game
         private void LvlUp()
         {
             Lvl++;
-
+            Hp += 20;
+            CurrentHp = Hp;
+            BaseAtk += 2;
         }
 
         public static Player CreateNewPlayer(string mention, string name)

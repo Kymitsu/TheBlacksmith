@@ -24,7 +24,7 @@ namespace TheBlacksmith.Modules
         {
             _ = Context.Message.DeleteAsync();
             Player p = GameInstance.Players.FindByMention(Context.User.Mention);
-            if(p == null)
+            if (p == null)
             {
                 p = GameInstance.CreateNewPlayer(Context.Message.Author.Mention, name);
                 await Context.Channel.SendMessageAsync($"{Context.User.Mention} Character {p.Name} - LVL{p.Lvl} created");
@@ -35,61 +35,50 @@ namespace TheBlacksmith.Modules
             }
         }
 
-        [Command("/adventure"), Alias("/adv")]
+        [Command("/newAdventure"), Alias("/newAdv")]
         public async Task NewAdventure(int advLvl)
         {
+            _ = Context.Message.DeleteAsync();
             Player player = GameInstance.Players.FindByMention(Context.Message.Author.Mention);
 
             var channel = await Context.Guild.CreateTextChannelAsync(
                 $"{player.Name}-adventure",
-                (x) => { 
+                (x) => {
                     x.CategoryId = GameInstance.ChannelCategory;
                     //TODO add permission to user
                 }
             );
             Adventure adv = GameInstance.CreateNewAdventure(channel.Id, advLvl, player);
             await channel.SendMessageAsync($"{player.Mention} Welcome {player.Name}! And good luck on your adventure.");
-            //adventure next step (first step)
+
+
+            var encounterMsg = await channel.SendMessageAsync($"```diff{Environment.NewLine}{adv.EncounterMsg.ToString()}```");
+            adv.EncouterMsgID = encounterMsg.Id;
+
+            var actionMsg = await channel.SendMessageAsync($"Vos actions /adv [] : {string.Join(" - ", adv.PossibleActions)}");
+            adv.ActionsMsgID = actionMsg.Id;
         }
 
-        //[Command("/test")]
-        //public async Task TestCommand()
-        //{
-        //    Player p = new Player(Context.User.Mention, "TestChar");
-        //    Monster m = new Monster("Crab", 1);
-        //    StringBuilder sb = new StringBuilder();
-        //    sb.AppendLine("```diff");
-        //    //sb.Append(Environment.NewLine);
-        //    sb.AppendLine($"You encounter {m.Name}: ({m.CurrentHp}/{m.Hp}hp)");
-        //    sb.AppendLine($"You have {p.CurrentHp}/{p.Hp} left.");
-        //    bool continueFight = true;
-        //    int damageRoll;
-        //    while (continueFight)
-        //    {
-        //        damageRoll = random.Next(10, 25);
-        //        m.CurrentHp -= damageRoll;
-        //        sb.AppendLine($"+ Dealt {damageRoll}hp to {m.Name}");
-        //        if(m.CurrentHp <=0)
-        //        {
-        //            continueFight = false;
-        //            sb.AppendLine("+ You win!");
-        //            sb.AppendLine($"You have {p.CurrentHp}/{p.Hp} left.");
-        //            continue;
-        //        }
+        [Command("/adventure"), Alias("/adv")]
+        public async Task Adventure(string action)
+        {
+            _ = Context.Message.DeleteAsync();
+            //TODO rajouter check channel id
+            Player player = GameInstance.Players.FindByMention(Context.Message.Author.Mention);
 
-        //        damageRoll = random.Next(5, 20);
-        //        p.CurrentHp -= damageRoll;
-        //        sb.AppendLine($"- Lost {damageRoll}hp");
-        //        if (p.CurrentHp <= 0)
-        //        {
-        //            continueFight = false;
-        //            sb.AppendLine("- You lost!");
-        //            continue;
-        //        }
-        //    }
+            Adventure test = GameInstance.ContinueAdventure(player, action);
 
-        //    sb.Append("```");
-        //    await Context.Channel.SendMessageAsync(sb.ToString());
-        //}
+            await Context.Channel.ModifyMessageAsync(
+                test.EncouterMsgID, 
+                x => { 
+                    x.Content = $"```diff{Environment.NewLine}{test.EncounterMsg.ToString()}```"; 
+                });
+
+            await Context.Channel.ModifyMessageAsync(test.ActionsMsgID,
+                x =>
+                {
+                    x.Content = $"{test.AdvMsg}{Environment.NewLine}Vos actions /adv [] : {string.Join(" - ", test.PossibleActions)}";
+                });
+        }
     }
 }

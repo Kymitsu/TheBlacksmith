@@ -11,5 +11,15 @@ namespace TheBlacksmith.Game
         {
             return players.FirstOrDefault(x => x.Mention == mention);
         }
+
+        public static void CopyTo(this List<String> source, List<string> target)
+        {
+            target.Clear();
+
+            foreach (string item in source)
+            {
+                target.Add(item);
+            }
+        }
     }
 }

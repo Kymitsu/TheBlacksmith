@@ -24,6 +24,12 @@ namespace TheBlacksmith.Game
             return newAdventure;
         }
 
-        
+        public static Adventure ContinueAdventure(Player player, string action)
+        {
+            Adventure adv = OnGoingAdventures.Find(a => a.Player == player);
+            adv.NextStep(action);
+
+            return adv;
+        }
     }
 }

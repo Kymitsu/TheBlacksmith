@@ -6,7 +6,7 @@ namespace TheBlacksmith
 {
     public static class StaticRandom
     {
-        private static Random random { get; set; }
+        private static Random random { get; set; } = new Random();
 
         public static int Next(int min, int max)
         {
