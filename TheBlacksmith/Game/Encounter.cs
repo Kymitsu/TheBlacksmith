@@ -4,34 +4,17 @@ using System.Text;
 
 namespace TheBlacksmith.Game
 {
-    public enum EncounterStatus
-    {
-        Ongoing = 0,
-        Victory = 1,
-        Defeat = 2,
-        Retreat = 3
-    }
-
-    public class EndOfEncounterEventArgs : EventArgs
-    {
-        public EncounterStatus Status { get; set; }
-
-        public EndOfEncounterEventArgs(EncounterStatus status)
-        {
-            Status = status;
-        }
-    }
 
     public class Encounter
     {
-        public event EventHandler<EndOfEncounterEventArgs> OnEndOfEncounter = delegate { };
+        public event EventHandler<EndOfEventArgs> OnEndOfEncounter = delegate { };
 
         public Monster Monster { get; set; }
         public Player Player { get; set; }
         public int Turn { get; set; }
-        public bool PlayerTurn { get; set; }
+        //public bool PlayerTurn { get; set; }
         public StringBuilder FightLog { get; set; }
-        public EncounterStatus Status { get; set; }
+        public Status Status { get; set; }
 
 
         public List<string> PossibleActions { get; set; }
@@ -41,7 +24,7 @@ namespace TheBlacksmith.Game
             Player = p;
             Monster = m;
             Turn = 0;
-            Status = EncounterStatus.Ongoing;
+            Status = Status.Ongoing;
             PossibleActions = new List<string>();
             FightLog = new StringBuilder();
             SetPlayerActions();
@@ -60,7 +43,7 @@ namespace TheBlacksmith.Game
             {
                 FightLog.AppendLine($"A {Monster.Name} - LVL{Monster.Lvl} jumps on you. It attacks first!");
 
-                MonsterTurnTODO();
+                MonsterTurn();
             }
             else
             {
@@ -69,7 +52,7 @@ namespace TheBlacksmith.Game
             }
         }
 
-        public void PlayerTurnTODO(string action = "")
+        public void PlayerTurn(string action = "")
         {
             if (string.IsNullOrWhiteSpace(action))
                 throw new Exception("shouldn't happen?");
@@ -77,8 +60,8 @@ namespace TheBlacksmith.Game
             if (action.ToLower() == "retreat")
             {
                 FightLog.AppendLine($"- You retreat from the fight. You don't gain anything but you are still alive...");
-                Status = EncounterStatus.Retreat;
-                OnEndOfEncounter(this, new EndOfEncounterEventArgs(EncounterStatus.Retreat));
+                Status = Status.Retreat;
+                OnEndOfEncounter(this, new EndOfEventArgs(Status.Retreat));
             }
             else
             {
@@ -88,17 +71,17 @@ namespace TheBlacksmith.Game
 
                 if (Monster.IsAlive)
                 {
-                    MonsterTurnTODO();
+                    MonsterTurn();
                 }
             }
 
             SetPlayerActions();
         }
 
-        public void MonsterTurnTODO()
+        public void MonsterTurn()
         {
-
-            var func = Monster.Attacks[StaticRandom.Next(0, Monster.Attacks.Count - 1)];
+            
+            var func = Monster.Attacks[StaticRandom.Next(0, Monster.Attacks.Count - 1)];//TODO: Monster pattern ?
             int damage = func.Invoke(Monster, Player, FightLog);
 
 
@@ -118,22 +101,23 @@ namespace TheBlacksmith.Game
             Player.Money -= loss;
             FightLog.AppendLine($"- You lost {loss} gold.");
 
-            Status = EncounterStatus.Defeat;
-            OnEndOfEncounter(this, new EndOfEncounterEventArgs(EncounterStatus.Defeat));
+            Status = Status.Defeat;
+            OnEndOfEncounter(this, new EndOfEventArgs(Status.Defeat));
         }
 
         private void OnMonsterKill()
         {
+            //TODO: Monster loot table
             int exp = Monster.Lvl * 5;
             int gold = Monster.Lvl + StaticRandom.Next(0, 5);
             FightLog.AppendLine($"+ {Monster.Name} has been slain. You gain {exp} XP and {gold} gold.");
 
 
-            bool isLvlUp = Player.AddExp(exp);
+            Player.AddExp(exp);
             Player.Money += gold;
 
-            Status = EncounterStatus.Victory;
-            OnEndOfEncounter(this, new EndOfEncounterEventArgs(EncounterStatus.Victory));
+            Status = Status.Victory;
+            OnEndOfEncounter(this, new EndOfEventArgs(Status.Victory));
         }
 
 

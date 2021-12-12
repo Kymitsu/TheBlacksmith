@@ -9,6 +9,7 @@ namespace TheBlacksmith.Game
         public event Action OnLevelUp = delegate { };
 
         public string Mention { get; set; }
+        public ulong ChannelID { get; set; }
 
         public int Money { get; set; }
         public int TotalExp { get; private set; }
@@ -16,6 +17,7 @@ namespace TheBlacksmith.Game
         public Player(string mention, string name, int lvl, int hp, int currentHp, int atk, int totalExp) : base(name, lvl, hp, atk)
         {
             Mention = mention;
+            ChannelID = 0;
             CurrentHp = currentHp;
             Money = 0;
             TotalExp = totalExp;
@@ -25,17 +27,16 @@ namespace TheBlacksmith.Game
         }
 
 
-        public bool AddExp(int xp)
+        public void AddExp(int xp)
         {
             TotalExp += xp;
             if(TotalExp % (50*Lvl) == 0)
             {
                 LvlUp();
                 OnLevelUp(); //Raise lvl up event
-                return true;
             }
 
-            return false;
+            return;
         }
 
         private void LvlUp()

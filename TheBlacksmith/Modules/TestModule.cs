@@ -11,8 +11,6 @@ namespace TheBlacksmith.Modules
 {
     public class TestModule : ModuleBase
     {
-        private static Random random = new Random();
-
         [Command("/ping")]
         public async Task Ping()
         {
@@ -40,23 +38,32 @@ namespace TheBlacksmith.Modules
         {
             _ = Context.Message.DeleteAsync();
             Player player = GameInstance.Players.FindByMention(Context.Message.Author.Mention);
+            Adventure test = GameInstance.OnGoingAdventures.FirstOrDefault(a => a.Player == player);
+            if(test != null)
+            {
+                await Context.Channel.SendMessageAsync($"{player.Name} already has an ongoing adventure here: <#{test.ChannelId}>");
+                
+            }
+            else
+            {
+                var channel = await Context.Guild.CreateTextChannelAsync(
+                    $"{player.Name}-adventure",
+                    (x) => {
+                            x.CategoryId = GameInstance.ChannelCategory;
+                            //TODO add permission to user
+                        }
+                    );
+                Adventure adv = GameInstance.CreateNewAdventure(channel.Id, advLvl, player);
+                await channel.SendMessageAsync($"{player.Mention} Welcome {player.Name}! Good luck on your adventure.");
 
-            var channel = await Context.Guild.CreateTextChannelAsync(
-                $"{player.Name}-adventure",
-                (x) => {
-                    x.CategoryId = GameInstance.ChannelCategory;
-                    //TODO add permission to user
-                }
-            );
-            Adventure adv = GameInstance.CreateNewAdventure(channel.Id, advLvl, player);
-            await channel.SendMessageAsync($"{player.Mention} Welcome {player.Name}! And good luck on your adventure.");
 
+                var encounterMsg = await channel.SendMessageAsync($"```diff{Environment.NewLine}{adv.EncounterMsg}```");
+                adv.EncouterMsgID = encounterMsg.Id;
 
-            var encounterMsg = await channel.SendMessageAsync($"```diff{Environment.NewLine}{adv.EncounterMsg.ToString()}```");
-            adv.EncouterMsgID = encounterMsg.Id;
-
-            var actionMsg = await channel.SendMessageAsync($"Vos actions /adv [] : {string.Join(" - ", adv.PossibleActions)}");
-            adv.ActionsMsgID = actionMsg.Id;
+                var actionMsg = await channel.SendMessageAsync($"Vos actions /adv [] : {string.Join(" - ", adv.PossibleActions)}");
+                adv.AdvMsgID = actionMsg.Id;
+            }
+            
         }
 
         [Command("/adventure"), Alias("/adv")]
@@ -66,19 +73,37 @@ namespace TheBlacksmith.Modules
             //TODO rajouter check channel id
             Player player = GameInstance.Players.FindByMention(Context.Message.Author.Mention);
 
-            Adventure test = GameInstance.ContinueAdventure(player, action);
+            Adventure adventure = GameInstance.ContinueAdventure(player, action);
 
-            await Context.Channel.ModifyMessageAsync(
-                test.EncouterMsgID, 
-                x => { 
-                    x.Content = $"```diff{Environment.NewLine}{test.EncounterMsg.ToString()}```"; 
-                });
+            if (!adventure.ReSendMsg)
+            {
+                await Context.Channel.ModifyMessageAsync(
+                    adventure.EncouterMsgID,
+                    x =>
+                    {
+                        x.Content = $"```diff{Environment.NewLine}{adventure.EncounterMsg}```";
+                    });
 
-            await Context.Channel.ModifyMessageAsync(test.ActionsMsgID,
-                x =>
-                {
-                    x.Content = $"{test.AdvMsg}{Environment.NewLine}Vos actions /adv [] : {string.Join(" - ", test.PossibleActions)}";
-                });
+                await Context.Channel.ModifyMessageAsync(adventure.AdvMsgID,
+                    x =>
+                    {
+                        string temp = string.Empty;
+                        if (adventure.AdvMsg.Length != 0) temp = $"```{ Environment.NewLine}{ adventure.AdvMsg}```{ Environment.NewLine}";
+                        x.Content = $"{temp}Vos actions /adv [] : {string.Join(" - ", adventure.PossibleActions)}";
+                    }); 
+            }
+            else
+            {
+                var encounterMsg = await Context.Channel.SendMessageAsync($"```diff{Environment.NewLine}{adventure.EncounterMsg}```");
+                adventure.EncouterMsgID = encounterMsg.Id;
+
+                string temp = string.Empty;
+                if (adventure.AdvMsg.Length != 0) temp = $"```{ Environment.NewLine}{ adventure.AdvMsg}```{ Environment.NewLine}";
+                var actionMsg = await Context.Channel.SendMessageAsync($"{temp}Vos actions /adv [] : {string.Join(" - ", adventure.PossibleActions)}");
+                adventure.AdvMsgID = actionMsg.Id;
+
+                adventure.ReSendMsg = false;
+            }
         }
     }
 }

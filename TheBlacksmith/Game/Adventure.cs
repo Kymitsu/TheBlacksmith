@@ -4,20 +4,10 @@ using System.Text;
 
 namespace TheBlacksmith.Game
 {
-    public class PlayerActionEvenArgs : EventArgs
-    {
-        public Player Player { get; set; }
-        public string action { get; set; }
-
-        public PlayerActionEvenArgs(Player player, string action)
-        {
-            Player = player;
-            this.action = action;
-        }
-    }
-
     public class Adventure
     {
+        public event EventHandler<EndOfEventArgs> OnEndOfAdventure = delegate { };
+
         public ulong ChannelId { get; set; }
         public int Lvl { get; set; }
         public Player Player { get; set; }
@@ -27,8 +17,9 @@ namespace TheBlacksmith.Game
         private Encounter CurrentEncounter { get; set; }
         public ulong EncouterMsgID { get; set; }
         public StringBuilder EncounterMsg { get; set; }
-        public ulong ActionsMsgID { get; set; }
+        public ulong AdvMsgID { get; set; }
         public StringBuilder AdvMsg { get; set; }
+        public bool ReSendMsg { get; set; }
         public bool IsWaitingForPlayerAction { get; set; }
 
         public List<string> PossibleActions { get; set; }
@@ -44,6 +35,7 @@ namespace TheBlacksmith.Game
             PossibleActions = new List<string>();
 
             AdvMsg = new StringBuilder();
+            ReSendMsg = false;
 
             GenerateEncounter(this.Lvl);
             CurrentEncounter.PossibleActions.CopyTo(PossibleActions);
@@ -53,7 +45,7 @@ namespace TheBlacksmith.Game
 
         //TODO: unsubscribe from event? pas sûr que ça soit nécessaire
         //https://stackoverflow.com/questions/4172809/should-i-unsubscribe-from-events
-        private void OnEndOfEncounter(object sender, EndOfEncounterEventArgs e)
+        private void OnEndOfEncounter(object sender, EndOfEventArgs e)
         {
             CompletedEncounter++;
             PossibleActions.Clear();
@@ -61,23 +53,32 @@ namespace TheBlacksmith.Game
             PossibleActions.Add("Continue");
             PossibleActions.Add("Deeper");
 
+            if (CurrentEncounter == null)
+                throw new Exception("Something wrong happened");
+
             EncounterMsg = CurrentEncounter.FightLog;
 
+            //Current Encounter Status
             switch (e.Status)
             {
-                case EncounterStatus.Ongoing:
+                case Status.Ongoing:
                     throw new Exception("shouldn't happen");
-                case EncounterStatus.Victory:
+                case Status.Victory:
+                    AdvMsg.AppendLine("The vile creature is dead.");
                     break;
-                case EncounterStatus.Defeat:
-                    AdvMsg.AppendLine("Your adventure end here, but this is not the end of your story.");
+                case Status.Retreat:
+                    AdvMsg.AppendLine("You managed to distance the monster.");
                     break;
-                case EncounterStatus.Retreat:
+                case Status.Defeat:
+                    PossibleActions.Clear();
+                    AdvMsg.AppendLine("Your adventure ends here, but this is not the end of your story.");
+                    OnEndOfAdventure(this, new EndOfEventArgs(Status.Defeat));
                     break;
                 default:
-                    break;
+                    throw new Exception("shouldn't happen");
             }
 
+            CurrentEncounter.OnEndOfEncounter -= OnEndOfEncounter;
             CurrentEncounter = null;
 
         }
@@ -88,29 +89,34 @@ namespace TheBlacksmith.Game
             {
                 switch (action)
                 {
-                    case "":
-                        GenerateEncounter(this.Lvl);
-                        break;
+                    //case "":
+                    //    GenerateEncounter(this.Lvl);
+                    //    break;
                     case "Tavern":
-                        AdvMsg.AppendLine("+ You return with your loot. You are safe now...");
+                        AdvMsg.AppendLine("You return with your loot. You are safe now...");
                         //Event end of adv ??
+                        OnEndOfAdventure(this, new EndOfEventArgs(Status.Retreat));
+
                         return;
 
                     case "Continue":
+                        ReSendMsg = true;
                         GenerateEncounter(this.Lvl + Difficulty);
                         break;
                     case "Deeper":
+                        ReSendMsg = true;
                         Difficulty++;
                         GenerateEncounter(this.Lvl + Difficulty);
                         break;
                     default:
-                        break;
+                        throw new Exception("wrong action");
                 }
+                CurrentEncounter.PossibleActions.CopyTo(PossibleActions);
             }
             else
             {
-                CurrentEncounter.PlayerTurnTODO(action);
-                if(CurrentEncounter != null && CurrentEncounter.Status == EncounterStatus.Ongoing)
+                CurrentEncounter.PlayerTurn(action);
+                if(CurrentEncounter != null && CurrentEncounter.Status == Status.Ongoing)
                     CurrentEncounter.PossibleActions.CopyTo(PossibleActions);
 
             }
@@ -127,6 +133,9 @@ namespace TheBlacksmith.Game
             CurrentEncounter = new Encounter(Player, m);
 
             CurrentEncounter.OnEndOfEncounter += OnEndOfEncounter;
+
+            AdvMsg.Clear();
+            PossibleActions.Clear();
         }
     }
 }

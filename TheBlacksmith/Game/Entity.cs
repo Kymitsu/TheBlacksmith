@@ -26,8 +26,13 @@ namespace TheBlacksmith.Game
                     IsAlive = false;
                     OnDeath(); //Raise death event
                 }
+                else if(_currentHp >= Hp)
+                {
+                    _currentHp = Hp;
+                }
             }
         }
+        public List<Func<Entity, Entity, StringBuilder, int>> Attacks { get; set; } = new List<Func<Entity, Entity, StringBuilder, int>>();
 
         protected Entity(string name, int lvl, int hp, int atk)
         {
@@ -39,10 +44,16 @@ namespace TheBlacksmith.Game
             IsAlive = true;
         }
 
-        public List<Func<Entity, Entity, StringBuilder, int>> Attacks { get; set; } = new List<Func<Entity, Entity, StringBuilder, int>>();
+        public void Heal(int amount)
+        {
+            CurrentHp += amount;
+        }
 
-
-
+        public void Heal(bool fullHeal)
+        {
+            if(fullHeal)
+                CurrentHp = Hp;
+        }
 
 
         public static int BasicAttack(Entity entity, Entity target, StringBuilder log)
