@@ -61,18 +61,18 @@ namespace TheBlacksmith.Game
             //Current Encounter Status
             switch (e.Status)
             {
-                case Status.Ongoing:
+                case State.Ongoing:
                     throw new Exception("shouldn't happen");
-                case Status.Victory:
+                case State.Victory:
                     AdvMsg.AppendLine("The vile creature is dead.");
                     break;
-                case Status.Retreat:
+                case State.Retreat:
                     AdvMsg.AppendLine("You managed to distance the monster.");
                     break;
-                case Status.Defeat:
+                case State.Defeat:
                     PossibleActions.Clear();
                     AdvMsg.AppendLine("Your adventure ends here, but this is not the end of your story.");
-                    OnEndOfAdventure(this, new EndOfEventArgs(Status.Defeat));
+                    OnEndOfAdventure(this, new EndOfEventArgs(State.Defeat));
                     break;
                 default:
                     throw new Exception("shouldn't happen");
@@ -95,7 +95,7 @@ namespace TheBlacksmith.Game
                     case "Tavern":
                         AdvMsg.AppendLine("You return with your loot. You are safe now...");
                         //Event end of adv ??
-                        OnEndOfAdventure(this, new EndOfEventArgs(Status.Retreat));
+                        OnEndOfAdventure(this, new EndOfEventArgs(State.Retreat));
 
                         return;
 
@@ -116,7 +116,7 @@ namespace TheBlacksmith.Game
             else
             {
                 CurrentEncounter.PlayerTurn(action);
-                if(CurrentEncounter != null && CurrentEncounter.Status == Status.Ongoing)
+                if(CurrentEncounter != null && CurrentEncounter.Status == State.Ongoing)
                     CurrentEncounter.PossibleActions.CopyTo(PossibleActions);
 
             }

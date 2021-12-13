@@ -6,9 +6,9 @@ namespace TheBlacksmith.Game
 {
     public class EndOfEventArgs : EventArgs
     {
-        public Status Status { get; set; }
+        public State Status { get; set; }
 
-        public EndOfEventArgs(Status status)
+        public EndOfEventArgs(State status)
         {
             Status = status;
         }

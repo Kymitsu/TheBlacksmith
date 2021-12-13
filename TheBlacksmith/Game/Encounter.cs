@@ -14,7 +14,7 @@ namespace TheBlacksmith.Game
         public int Turn { get; set; }
         //public bool PlayerTurn { get; set; }
         public StringBuilder FightLog { get; set; }
-        public Status Status { get; set; }
+        public State Status { get; set; }
 
 
         public List<string> PossibleActions { get; set; }
@@ -24,7 +24,7 @@ namespace TheBlacksmith.Game
             Player = p;
             Monster = m;
             Turn = 0;
-            Status = Status.Ongoing;
+            Status = State.Ongoing;
             PossibleActions = new List<string>();
             FightLog = new StringBuilder();
             SetPlayerActions();
@@ -60,8 +60,8 @@ namespace TheBlacksmith.Game
             if (action.ToLower() == "retreat")
             {
                 FightLog.AppendLine($"- You retreat from the fight. You don't gain anything but you are still alive...");
-                Status = Status.Retreat;
-                OnEndOfEncounter(this, new EndOfEventArgs(Status.Retreat));
+                Status = State.Retreat;
+                OnEndOfEncounter(this, new EndOfEventArgs(State.Retreat));
             }
             else
             {
@@ -101,8 +101,8 @@ namespace TheBlacksmith.Game
             Player.Money -= loss;
             FightLog.AppendLine($"- You lost {loss} gold.");
 
-            Status = Status.Defeat;
-            OnEndOfEncounter(this, new EndOfEventArgs(Status.Defeat));
+            Status = State.Defeat;
+            OnEndOfEncounter(this, new EndOfEventArgs(State.Defeat));
         }
 
         private void OnMonsterKill()
@@ -116,8 +116,8 @@ namespace TheBlacksmith.Game
             Player.AddExp(exp);
             Player.Money += gold;
 
-            Status = Status.Victory;
-            OnEndOfEncounter(this, new EndOfEventArgs(Status.Victory));
+            Status = State.Victory;
+            OnEndOfEncounter(this, new EndOfEventArgs(State.Victory));
         }
 
 

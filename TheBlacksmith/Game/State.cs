@@ -4,7 +4,7 @@ using System.Text;
 
 namespace TheBlacksmith.Game
 {
-    public enum Status
+    public enum State
     {
         Ongoing = 0,
         Victory = 1,
