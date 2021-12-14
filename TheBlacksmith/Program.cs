@@ -26,8 +26,11 @@ namespace TheBlacksmith
             _config = BuildConfig();
             var services = ConfigureServices();
             await services.GetRequiredService<CommandHandlingService>().InitializeAsync(services);
+            await services.GetRequiredService<ReactionHandlingService>().InitializeAsync(services);
             await _client.LoginAsync(TokenType.Bot, _config["token"]);
             await _client.StartAsync();
+
+            //_client.Disconnected => peut être un moyen de reco le bot
 
             await Task.Delay(-1);
         }
@@ -45,6 +48,7 @@ namespace TheBlacksmith
                 // Extra
                 .AddSingleton(_config)
                 // Add additional services here...
+                .AddSingleton<ReactionHandlingService>()
                 .BuildServiceProvider();
         }
 

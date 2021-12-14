@@ -39,6 +39,7 @@ namespace TheBlacksmith.Game
         public static void OnEndOfAdventure(object sender, EventArgs e)
         {
             var adv = (Adventure)sender;
+            adv.PossibleActions.Clear();
             adv.OnEndOfAdventure -= OnEndOfAdventure;
             OnGoingAdventures.Remove(adv);
             CompletedAdventures.Add(adv);
