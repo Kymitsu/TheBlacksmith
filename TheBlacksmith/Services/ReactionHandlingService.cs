@@ -14,7 +14,7 @@ namespace TheBlacksmith.Services
         private readonly DiscordSocketClient _discord;
         private IServiceProvider _provider;
 
-        private List<string> _pagedMsgEmote;
+        private List<string> _pagedMsgEmotes;
 
         public ReactionHandlingService(IServiceProvider provider, DiscordSocketClient discord)
         {
@@ -29,10 +29,10 @@ namespace TheBlacksmith.Services
         {
             _provider = provider;
 
-            _pagedMsgEmote = new List<string>();
-            _pagedMsgEmote.Add("\U000025c0");
-            _pagedMsgEmote.Add("\U000025b6");
-            _pagedMsgEmote.Add("\U0001F504");
+            _pagedMsgEmotes = new List<string>();
+            _pagedMsgEmotes.Add("\U000025c0");
+            _pagedMsgEmotes.Add("\U000025b6");
+            _pagedMsgEmotes.Add("\U0001F504");
 
         }
 
@@ -40,7 +40,7 @@ namespace TheBlacksmith.Services
         {
             if (reaction.User.Value.IsBot) return;
 
-            if (_pagedMsgEmote.Contains(reaction.Emote.Name))
+            if (_pagedMsgEmotes.Contains(reaction.Emote.Name))
             {
                 _ = Task.Run(() => UpdateStatusMessage(reaction.Emote.Name, reaction.User.Value.Mention, cache));
             }
@@ -50,7 +50,7 @@ namespace TheBlacksmith.Services
         {
             if (reaction.User.Value.IsBot) return;
 
-            if (_pagedMsgEmote.Contains(reaction.Emote.Name))
+            if (_pagedMsgEmotes.Contains(reaction.Emote.Name))
             {
                 _ = Task.Run(() => UpdateStatusMessage(reaction.Emote.Name, reaction.User.Value.Mention, cache));
             }

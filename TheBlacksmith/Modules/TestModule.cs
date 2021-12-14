@@ -142,15 +142,15 @@ namespace TheBlacksmith.Modules
 
             for (int i = 0; i < actions.Count; i++)
             {
+                if ((i + 1) % 3 == 1)
+                    sb.Append("|");
+
                 string temp = $"{prefix} {actions[i]}";
-                if (i % 3 == 0)
-                {
-                    sb.Append(string.Format($"|{{0,-{longestAction}}}|", temp));
-                }
-                else
-                {
-                    sb.AppendLine(string.Format($"|{{0,-{longestAction}}}|", temp));
-                }
+
+                sb.Append(string.Format($"{{0,-{longestAction + 1}}}|", temp));
+
+                if ((i + 1) % 3 == 0)
+                    sb.AppendLine("\u200b");
             }
 
             return sb.ToString();
