@@ -41,14 +41,20 @@ namespace TheBlacksmith.Services
             //TODO : restriction sur un channel ou plutot un groupe de channel
 
             var context = new SocketCommandContext(_discord, message);
-            var result = await _commands.ExecuteAsync(context, argPos, _provider);
 
-            if (result.Error.HasValue &&
-                result.Error.Value != CommandError.UnknownCommand)
-            {
-                await Log($"{context.User.Username}  :  {rawMessage}  :  {result.ToString()}");
-                //await context.Channel.SendMessageAsync(context.User.Mention + " : " + result.ToString());
-            }
+            //run command in another Task
+            //should remove the "A MessageReceived handler is blocking the gateway task." error
+            _ = Task.Run(async () => {
+                var result = await _commands.ExecuteAsync(context, argPos, _provider);
+
+                if (result.Error.HasValue &&
+                    result.Error.Value != CommandError.UnknownCommand)
+                {
+                    await Log($"{context.User.Username}  :  {rawMessage}  :  {result.ToString()}");
+                    //await context.Channel.SendMessageAsync(context.User.Mention + " : " + result.ToString());
+                }
+            });
+            
         }
 
         private Task Log(string msg)
