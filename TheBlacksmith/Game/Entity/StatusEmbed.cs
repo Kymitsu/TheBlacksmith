@@ -17,7 +17,7 @@ namespace TheBlacksmith.Game
 
         public override void BuildPages()
         {
-            PagesTest.Add(1, () => {
+            Pages.Add(1, () => {
                 EmbedBuilder page1 = new EmbedBuilder();
                 page1.WithAuthor(Player.Name);
                 page1.WithTitle("Status");
@@ -30,7 +30,7 @@ namespace TheBlacksmith.Game
                 return page1;
             });
 
-            PagesTest.Add(2, () => {
+            Pages.Add(2, () => {
                 EmbedBuilder page2 = new EmbedBuilder();
                 page2.WithAuthor(Player.Name);
                 page2.WithTitle("Skills");

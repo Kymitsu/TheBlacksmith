@@ -8,13 +8,13 @@ namespace TheBlacksmith
     public abstract class PagedMessage<T>
     {
         public int CurrentPage { get; set; }
-        public Dictionary<int, Func<T>> PagesTest { get; set; }
+        public Dictionary<int, Func<T>> Pages { get; set; }
         public List<ulong> MessageIds { get; set; }
 
         public PagedMessage()
         {
             CurrentPage = 1;
-            PagesTest = new Dictionary<int, Func<T>>();
+            Pages = new Dictionary<int, Func<T>>();
             MessageIds = new List<ulong>();
         }
 
@@ -22,14 +22,14 @@ namespace TheBlacksmith
 
         public T GetCurrentPage()
         {
-            return PagesTest[CurrentPage].Invoke();
+            return Pages[CurrentPage].Invoke();
         }
         public T GetNextPage()
         {
-            if (CurrentPage < PagesTest.Count)
+            if (CurrentPage < Pages.Count)
                 CurrentPage++;
 
-            return PagesTest[CurrentPage].Invoke();
+            return Pages[CurrentPage].Invoke();
         }
 
         public T GetPreviousPage()
@@ -37,7 +37,7 @@ namespace TheBlacksmith
             if (CurrentPage != 1)
                 CurrentPage--;
 
-            return PagesTest[CurrentPage].Invoke();
+            return Pages[CurrentPage].Invoke();
         }
     }
 }
