@@ -13,8 +13,9 @@ namespace TheBlacksmith.Game
         public StatusEmbed Status { get; set; }
 
         public int Money { get; set; }
-        public int TotalExp { get; private set; }
+        public Inventory Inventory { get; set; }
 
+        public int TotalExp { get; private set; }
         public int CurrentExp { get; private set; }
         public int ExpToLvl { get; private set; }
 
@@ -27,6 +28,7 @@ namespace TheBlacksmith.Game
             TotalExp = 0;
             CurrentExp = 0;
             ExpToLvl = 50 * Lvl;
+            Inventory = new Inventory();
 
             Attacks.Add(BasicAttack);
             Attacks.Add(StrongAttack);
