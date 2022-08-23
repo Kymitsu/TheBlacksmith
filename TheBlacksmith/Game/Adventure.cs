@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace TheBlacksmith.Game
@@ -43,7 +44,7 @@ namespace TheBlacksmith.Game
             EncounterMsg = CurrentEncounter.FightLog;
         }
 
-        //TODO: unsubscribe from event? pas sûr que ça soit nécessaire
+        //Imporant de unsubscribe des events si subscriber (ici Adventure) vit plus lontemps que le event producer (Encounter)
         //https://stackoverflow.com/questions/4172809/should-i-unsubscribe-from-events
         private void OnEndOfEncounter(object sender, EndOfEventArgs e)
         {
@@ -136,6 +137,46 @@ namespace TheBlacksmith.Game
 
             AdvMsg.Clear();
             PossibleActions.Clear();
+        }
+
+        public string BuildAdventureMessage()
+        {
+            string temp;
+            temp = $"```md{ Environment.NewLine}";
+
+            if (AdvMsg.Length != 0)
+                temp += $"{ AdvMsg}{ Environment.NewLine}";
+
+            if (PossibleActions.Any())
+            {
+                temp += $"Vos actions:{Environment.NewLine}";
+                temp += $"-----------------------------------{Environment.NewLine}";
+                temp += $"{FormatPossibleActions("/adv", PossibleActions)}```";
+            }
+                
+
+            return temp;
+        }
+
+        private string FormatPossibleActions(string prefix, List<string> actions)
+        {
+            StringBuilder sb = new StringBuilder();
+            int longestAction = prefix.Length + actions.Aggregate("", (max, cur) => max.Length > cur.Length ? max : cur).Length + 1;
+
+            for (int i = 0; i < actions.Count; i++)
+            {
+                if ((i + 1) % 3 == 1)
+                    sb.Append("|");
+
+                string temp = $"{prefix} {actions[i]}";
+
+                sb.Append(string.Format($"{{0,-{longestAction + 1}}}|", temp));
+
+                if ((i + 1) % 3 == 0)
+                    sb.AppendLine("\u200b");
+            }
+
+            return sb.ToString();
         }
     }
 }
