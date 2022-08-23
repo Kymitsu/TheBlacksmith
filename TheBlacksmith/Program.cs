@@ -27,6 +27,7 @@ namespace TheBlacksmith
             var services = ConfigureServices();
             await services.GetRequiredService<CommandHandlingService>().InitializeAsync(services);
             await services.GetRequiredService<ReactionHandlingService>().InitializeAsync(services);
+            await services.GetRequiredService<ButtonHandlingService>().InitializeAsync(services);
             await _client.LoginAsync(TokenType.Bot, _config["token"]);
             await _client.StartAsync();
 
@@ -42,6 +43,7 @@ namespace TheBlacksmith
                 .AddSingleton(_client)
                 .AddSingleton<CommandService>()
                 .AddSingleton<CommandHandlingService>()
+                .AddSingleton<ButtonHandlingService>()
                 // Logging
                 //.AddLogging()
                 //.AddSingleton<LogService>()

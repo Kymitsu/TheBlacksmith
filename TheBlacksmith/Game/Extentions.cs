@@ -21,5 +21,11 @@ namespace TheBlacksmith.Game
                 target.Add(item);
             }
         }
+
+        public static void AppendBlock(this StringBuilder main, StringBuilder toAppend)
+        {
+            
+
+        }
     }
 }

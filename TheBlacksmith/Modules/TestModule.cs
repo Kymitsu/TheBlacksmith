@@ -78,13 +78,16 @@ namespace TheBlacksmith.Modules
                 await channel.SendMessageAsync($"{player.Mention} Welcome {player.Name}! Good luck on your adventure.");
 
 
-                var encounterMsg = await channel.SendMessageAsync($"```diff{Environment.NewLine}{adventure.EncounterMsg}```");
+                var builder = new ComponentBuilder();
+                foreach (var item in adventure.PossibleActions)
+                {
+                    builder.WithButton(item, item);
+                }
+                var encounterMsg = await channel.SendMessageAsync($"```diff{Environment.NewLine}{adventure.EncounterMsg}```", components:builder.Build());
                 adventure.EncouterMsgID = encounterMsg.Id;
                 
-                //var actionMsg = await channel.SendMessageAsync($"Vos actions /adv [] : {string.Join(" - ", adv.PossibleActions)}");
-                var actionMsg = await channel.SendMessageAsync($"Vos actions:{Environment.NewLine}```{FormatPossibleActions("/adv", adventure.PossibleActions)}```");
-
-                adventure.AdvMsgID = actionMsg.Id;
+                //var actionMsg = await channel.SendMessageAsync(adventure.BuildAdventureMessage());
+                //adventure.AdvMsgID = actionMsg.Id;
             }
             
         }
@@ -107,53 +110,24 @@ namespace TheBlacksmith.Modules
                         x.Content = $"```diff{Environment.NewLine}{adventure.EncounterMsg}```";
                     });
 
-                await Context.Channel.ModifyMessageAsync(adventure.AdvMsgID,
-                    x =>
-                    {
-                        string temp = string.Empty;
-                        if (adventure.AdvMsg.Length != 0) temp = $"```{ Environment.NewLine}{ adventure.AdvMsg}```{ Environment.NewLine}";
-                        //x.Content = $"{temp}Vos actions /adv [] : {string.Join(" - ", adventure.PossibleActions)}";
-                        x.Content = $"{temp}Vos actions:{Environment.NewLine}```{FormatPossibleActions("/adv", adventure.PossibleActions)}```";
-                    });
+                //await Context.Channel.ModifyMessageAsync(adventure.AdvMsgID,
+                //    x =>
+                //    {
+                //        x.Content = adventure.BuildAdventureMessage();
+                //    });
             }
             else
             {
                 var encounterMsg = await Context.Channel.SendMessageAsync($"```diff{Environment.NewLine}{adventure.EncounterMsg}```");
                 adventure.EncouterMsgID = encounterMsg.Id;
 
-                string temp = string.Empty;
-                if (adventure.AdvMsg.Length != 0) 
-                    temp = $"```{ Environment.NewLine}{ adventure.AdvMsg}```{ Environment.NewLine}";
-                if (adventure.PossibleActions.Any())
-                    //temp += $"Vos actions /adv [] : {string.Join(" - ", adventure.PossibleActions)}";
-                    temp += $"Vos actions:{Environment.NewLine}```{FormatPossibleActions("/adv", adventure.PossibleActions)}```";
-
-                var actionMsg = await Context.Channel.SendMessageAsync(temp);
-                adventure.AdvMsgID = actionMsg.Id;
+                //var actionMsg = await Context.Channel.SendMessageAsync(adventure.BuildAdventureMessage());
+                //adventure.AdvMsgID = actionMsg.Id;
 
                 adventure.ReSendMsg = false;
             }
         }
 
-        private string FormatPossibleActions(string prefix, List<string> actions)
-        {
-            StringBuilder sb = new StringBuilder();
-            int longestAction = prefix.Length + actions.Aggregate("", (max, cur) => max.Length > cur.Length ? max : cur).Length + 1;
-
-            for (int i = 0; i < actions.Count; i++)
-            {
-                if ((i + 1) % 3 == 1)
-                    sb.Append("|");
-
-                string temp = $"{prefix} {actions[i]}";
-
-                sb.Append(string.Format($"{{0,-{longestAction + 1}}}|", temp));
-
-                if ((i + 1) % 3 == 0)
-                    sb.AppendLine("\u200b");
-            }
-
-            return sb.ToString();
-        }
+        
     }
 }
